@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StarterZero · Report Settimanale #013</title>
+<!--
+╔══════════════════════════════════════════════════════════════════╗
+║          STARTER ZERO — TEMPLATE REPORT SETTIMANALE             ║
+║          Versione 1.0 — Aprile 2026                             ║
+╠══════════════════════════════════════════════════════════════════╣
+║  WORKFLOW DOMENICALE (in ordine):                               ║
+║                                                                  ║
+║  STEP 1 — Copia questo file e rinominalo:                       ║
+║            StarterZero_Week_0XX.html                            ║
+║                                                                  ║
+║  STEP 2 — Aggiorna il blocco W (sezione DATI JS, in fondo)     ║
+║            → edizione, periodo, pubblicato                      ║
+║            → tema (testo narrativo)                             ║
+║            → spx, gold, dxy, vwce (prezzi + 15 chiusure)       ║
+║            → etf (flussi, BTC, AUM, emittenti, YTD)            ║
+║            → sentiment (Fear & Greed)                           ║
+║            → stagionalita (solo current:true e meta dati mese) ║
+║            → oi (OI/FR + segnale Q1/Q2/Q3/Q4)                 ║
+║            → outlook (eventi + scenari + nota)                  ║
+║                                                                  ║
+║  STEP 3 — Aggiorna i 14 valori STATICI HTML (segnati con ★):   ║
+║            1.  <title>                                          ║
+║            2.  .hero-tag                                        ║
+║            3.  .hero-sub                                        ║
+║            4.  section Macro subtitle span                      ║
+║            5.  section ETF subtitle span                        ║
+║            6.  3 badge .tema-badges-row                         ║
+║            7.  5 statistiche .tema-stats                        ║
+║            8.  4 KPI ETF (.kpi-value + .kpi-delta)             ║
+║            9.  2 badge card etf-daily                           ║
+║            10. nota card etf-daily                              ║
+║            11. 4 KPI OI                                         ║
+║            12. 2 badge card OI                                  ║
+║            13. quadrante active-quad (sposta su Q giusto)       ║
+║            14. footer span#footer-edizione                      ║
+║                                                                  ║
+║  STEP 4 — Apri nel browser, verifica grafici e dati            ║
+║                                                                  ║
+║  REGOLE DA NON VIOLARE MAI:                                     ║
+║  ✗ toggleMacro() vuole UN solo parametro (l'id)                ║
+║  ✗ NON mettere testo nei div id="note-spx/gold/dxy/vwce"       ║
+║  ✗ NON mettere testo nel div id="tema-testo"                   ║
+║  ✗ NON aggiungere un secondo DOMContentLoaded                  ║
+║  ✗ NON modificare setupCanvas, drawLine, drawOI ecc.           ║
+║  ✓ Ogni card deve avere class="open" per mostrarsi             ║
+║  ✓ Probabilità scenari: Bull + Base + Bear = 100%              ║
+║  ✓ current:true su UN solo mese alla volta                     ║
+║  ✓ segnale OI e active-quad HTML devono essere coerenti        ║
+╚══════════════════════════════════════════════════════════════════╝
+-->
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Manrope:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0810;
+    --surface: #100d1a;
+    --card: #130f20;
+    --border: #1f1a30;
+    --orange: #f7931a;
+    --gold: #d4a843;
+    --magenta: #e8197d;
+    --green: #00e5a0;
+    --red: #ff3d71;
+    --blue: #4d9eff;
+    --purple: #a78bfa;
+    --text: #ede8f8;
+    --muted: #5a5070;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0810;
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    padding: 0 0 60px;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* forza sfondo scuro su tutto */
+  html { background: #0a0810; }
+
+  /* ── HERO HEADER ── */
+  .hero {
+    background: linear-gradient(135deg, #1a0f2e 0%, #0f0820 40%, #0a0810 100%);
+    border-bottom: 1px solid rgba(212,168,67,0.2);
+    padding: 36px 36px 32px;
+    display: flex; flex-direction: column; align-items: flex-start;
+    position: relative; overflow: hidden;
+  }
+  /* circuiti decorativi stile biglietto */
+  .hero::before {
+    content: ''; position: absolute; right: -80px; top: -80px;
+    width: 420px; height: 420px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,25,125,0.07) 0%, rgba(212,168,67,0.05) 40%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: ''; position: absolute; left: -40px; bottom: -40px;
+    width: 280px; height: 280px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(247,147,26,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  /* gold top border */
+  .hero-topbar {
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), var(--magenta), transparent);
+  }
+  /* logo + brand top-right */
+  .hero-brand {
+    position: absolute; top: 20px; right: 28px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .hero-logo {
+    width: 48px; height: 48px; border-radius: 12px;
+    overflow: hidden; border: 2px solid rgba(212,168,67,0.6);
+    flex-shrink: 0; background: #2d0a28;
+    box-shadow: 0 0 14px rgba(212,168,67,0.25);
+  }
+  .hero-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hero-brand-text { text-align: right; }
+  .hero-brand-name {
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600;
+    color: var(--gold); letter-spacing: 2px; text-transform: uppercase; line-height: 1.2;
+  }
+  .hero-brand-sub {
+    font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--muted);
+    letter-spacing: 1px; text-transform: uppercase; margin-top: 2px;
+  }
+  .hero-tag {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px;
+    color: var(--gold); text-transform: uppercase;
+    border: 1px solid rgba(212,168,67,0.3); border-radius: 20px; padding: 4px 12px;
+    margin-bottom: 14px; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .hero-tag::before { content: '●'; font-size: 6px; animation: blink 1.5s infinite; color: var(--magenta); }
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.2} }
+  .hero h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 800; line-height: 1.05; max-width: 620px; }
+  .hero h1 span { color: var(--gold); }
+  .hero h1 em { color: var(--magenta); font-style: normal; }
+  .hero-sub { color: var(--muted); font-size: 13px; margin-top: 10px; font-family: 'IBM Plex Mono', monospace; }
+  .hero-divider {
+    width: 60px; height: 2px; margin-top: 16px;
+    background: linear-gradient(90deg, var(--gold), var(--magenta));
+    border-radius: 2px;
+  }
+
+  /* ── LAYOUT ── */
+  .content { max-width: 1020px; margin: 0 auto; padding: 0 24px; background: #0a0810; }
+
+  /* ── SECTION HEADERS ── */
+  .section { margin-top: 40px; }
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .section-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .section-title-text { font-size: 20px; font-weight: 800; color: var(--text); }
+  .section-title-text span { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 400; color: var(--muted); letter-spacing: 2px; margin-left: 8px; text-transform: uppercase; }
+  .divider { flex: 1; height: 1px; background: var(--border); }
+
+  /* ── CARDS ── */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .kpi {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; position: relative; overflow: hidden;
+  }
+  .kpi::after { content:''; position:absolute; top:0;left:0;right:0;height:2px; background: var(--accent, var(--orange)); }
+  .kpi-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 7px; }
+  .kpi-value { font-size: 19px; font-weight: 800; color: var(--accent, var(--text)); line-height: 1.2; }
+  .kpi-delta { font-size: 11px; margin-top: 4px; }
+  .up { color: var(--green); }
+  .down { color: var(--red); }
+  .neu { color: var(--muted); }
+
+  /* ── CHART BOX ── */
+  .chart-box {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; margin-bottom: 14px;
+    position: relative; overflow: hidden;
+  }
+  .chart-box::before {
+    content:''; position:absolute; top:0;left:0;right:0;height:2px;
+    background: linear-gradient(90deg, var(--box-color, var(--orange)), transparent);
+  }
+  .chart-title { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 14px; }
+
+  /* ── MACRO STACKED ── */
+  .macro-stack { display: flex; flex-direction: column; gap: 12px; }
+  .macro-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    position: relative;
+  }
+  .macro-card::before { content:''; position:absolute; top:0;left:0;right:0;height:2px; background: var(--accent, var(--blue)); z-index:1; }
+  .macro-card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 18px 10px; cursor: pointer; user-select: none;
+    gap: 10px; min-width: 0;
+  }
+  .macro-card-header:hover { background: rgba(255,255,255,0.02); }
+  .macro-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+  .macro-name { font-weight: 800; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .macro-ticker { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .macro-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .macro-price { font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 600; }
+  .macro-badges { display: flex; gap: 6px; align-items: center; }
+  .badge {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600;
+    padding: 3px 8px; border-radius: 6px;
+  }
+  .badge.up { background: rgba(0,229,160,0.15); color: var(--green); }
+  .badge.down { background: rgba(255,61,113,0.15); color: var(--red); }
+  .badge.neu { background: rgba(74,96,128,0.2); color: var(--muted); }
+  .macro-chevron { color: var(--muted); font-size: 12px; transition: transform .3s; }
+  .macro-card.open .macro-chevron { transform: rotate(180deg); }
+  .macro-chart-wrap {
+    display: none;
+  }
+  .macro-card.open .macro-chart-wrap {
+    display: block;
+    border-top: 1px solid var(--border);
+  }
+  .mc-canvas-wrap { padding: 10px 14px 4px; height: 190px; }
+  .mc-canvas-wrap canvas { display: block; }
+  .macro-note { font-size: 12px; color: var(--muted); line-height: 1.6; padding: 10px 16px 14px; border-top: 1px solid var(--border); margin-top: 8px; }
+  .macro-note strong { color: var(--text); }
+
+  /* ── LEGEND ── */
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+  .l-dot { width: 10px; height: 10px; border-radius: 2px; }
+  .l-line { width: 20px; height: 2px; border-radius: 2px; }
+
+  /* ── OUTLOOK SECTION ── */
+  .section-title-small {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px;
+    color: var(--muted); text-transform: uppercase;
+    margin: 16px 0 10px; border-left: 2px solid var(--orange); padding-left: 10px;
+  }
+
+  .outlook-calendar-title {
+    font-size: 20px; font-weight: 800; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  /* Calendario eventi */
+  .events-stack { display: flex; flex-direction: column; gap: 4px; }
+  .event-row {
+    display: grid; grid-template-columns: 60px 1fr 1fr; gap: 12px;
+    align-items: start; padding: 10px 14px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--card);
+  }
+  .event-row.highlight { border-color: rgba(247,147,26,0.35); background: rgba(247,147,26,0.05); }
+  .event-day { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700; color: var(--orange); padding-top: 2px; }
+  .event-name { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .event-meta { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); }
+  .event-expect { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* Scenari */
+  .scenarios { display: flex; flex-direction: column; gap: 8px; }
+  .scenario { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .sc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .sc-tag { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+  .bull-tag  { background: rgba(0,229,160,0.15); color: var(--green); }
+  .base-tag  { background: rgba(247,147,26,0.15); color: var(--orange); }
+  .bear-tag  { background: rgba(255,61,113,0.15); color: var(--red); }
+  .sc-prob { font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 800; color: var(--muted); }
+  .scenario.bull .sc-prob { color: var(--green); }
+  .scenario.base .sc-prob { color: var(--orange); }
+  .scenario.bear .sc-prob { color: var(--red); }
+  .sc-trigger { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .sc-target  { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+  .sc-bar { height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .sc-fill { height: 100%; border-radius: 4px; transition: width .6s ease; }
+
+  /* ── TEMA SETTIMANA BOX ── */
+  .tema-box {
+    background: var(--card); border: 1px solid var(--border);
+    border-left: 3px solid var(--magenta);
+    border-radius: 0 14px 14px 0; padding: 16px 18px; margin-bottom: 14px;
+  }
+  .tema-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .tema-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--magenta); text-transform: uppercase; flex-shrink: 0; }
+  .tema-badges-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tema-badge { font-family: 'IBM Plex Mono', monospace; font-size: 9px; padding: 3px 8px; border-radius: 20px; font-weight: 600; }
+  .tema-badge.fed  { background: rgba(77,158,255,0.15); color: var(--blue); }
+  .tema-badge.iran { background: rgba(255,61,113,0.15); color: var(--red); }
+  .tema-badge.btc  { background: rgba(247,147,26,0.15); color: var(--orange); }
+  .tema-body { font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 14px; }
+  .tema-body strong { color: var(--text); }
+  .tema-stats { display: flex; gap: 6px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--border); }
+  .tema-stat { background: var(--surface); border-radius: 8px; padding: 6px 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; min-width: 54px; }
+  .ts-label { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .ts-val { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; }
+  .ts-val.up { color: var(--green); }
+  .ts-val.down { color: var(--red); }
+
+  /* ── OI QUADRANT compatto 2x2 ── */
+  .oi-quadrant { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 14px 0; }
+  .oi-quad { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; position: relative; }
+  .active-quad { border-color: rgba(77,158,255,0.4); background: rgba(77,158,255,0.05); }
+  .oiq-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+  .oiq-icon-sm { font-size: 14px; flex-shrink: 0; }
+  .oiq-badge { position: absolute; top: 7px; right: 7px; background: var(--blue); color: #000; font-family: 'IBM Plex Mono', monospace; font-size: 7px; font-weight: 700; padding: 2px 6px; border-radius: 8px; letter-spacing: 1px; }
+  .oiq-title { font-size: 12px; font-weight: 800; }
+  .oiq-sub { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); margin-bottom: 4px; }
+  .oiq-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+  /* ── CALLOUT ── */
+  .callout {
+    background: var(--card); border: 1px solid var(--border);
+    border-left: 3px solid var(--callout-color, var(--orange));
+    border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 12px;
+    font-size: 13px; line-height: 1.7; color: var(--muted);
+  }
+  .callout strong { color: var(--text); }
+
+  /* ── ETF TABLE ── */
+  .etf-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+  .etf-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .etf-name { font-weight: 700; font-size: 14px; }
+  .etf-ticker { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); }
+  .etf-flow { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; }
+  .pos { color: var(--green); } .neg { color: var(--red); }
+
+  /* ── TRADINGVIEW COMPONENT ── */
+  .tv-wrap {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; margin-top: 16px;
+    position: relative;
+  }
+  .tv-toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; gap: 8px;
+  }
+  .tv-asset-tabs { display: flex; gap: 4px; }
+  .tv-tab {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); cursor: pointer;
+    transition: all .18s;
+  }
+  .tv-tab:hover { color: var(--text); border-color: #2d3a50; }
+  .tv-tab.active { background: rgba(247,147,26,0.12); color: var(--orange); border-color: rgba(247,147,26,0.35); }
+  .tv-ma-toggles { display: flex; gap: 6px; }
+  .tv-ma-btn {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); cursor: pointer;
+    display: flex; align-items: center; gap: 5px; transition: all .18s;
+    opacity: 0.45;
+  }
+  .tv-ma-btn.active { opacity: 1; color: var(--text); border-color: #2d3a50; }
+  .ma-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .tv-infobar {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 8px 14px; border-bottom: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  }
+  .tv-asset-label { color: var(--muted); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+  .tv-ohlc { color: var(--muted); font-size: 10px; }
+  .tv-ohlc span { margin-right: 8px; }
+  .tv-ohlc .o { color: var(--text); }
+  .tv-ohlc .h { color: var(--green); }
+  .tv-ohlc .l { color: var(--red); }
+  .tv-ohlc .c { color: var(--text); font-weight: 600; }
+  .tv-change { font-size: 11px; font-weight: 600; }
+  .tv-canvas-wrap {
+    position: relative; padding: 12px 14px 4px;
+    height: 320px;
+  }
+  #tvCanvas { display: block; }
+  .tv-crosshair-x, .tv-crosshair-y {
+    position: absolute; pointer-events: none;
+    background: rgba(148,163,184,0.2); display: none;
+  }
+  .tv-crosshair-x { top: 12px; bottom: 4px; width: 1px; }
+  .tv-crosshair-y { left: 14px; right: 14px; height: 1px; }
+  .tv-tooltip {
+    position: absolute; pointer-events: none;
+    background: #0b0f1a; border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    color: var(--text); white-space: nowrap; display: none;
+    z-index: 10; line-height: 1.8; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  .tv-notes {
+    padding: 12px 16px; font-size: 12px; color: var(--muted);
+    border-top: 1px solid var(--border); line-height: 1.6;
+  }
+  .tv-notes strong { color: var(--text); }
+
+  footer {
+    margin-top: 48px; padding: 20px 24px;
+    border-top: 1px solid var(--border);
+    text-align: center; max-width: 1020px; margin-left: auto; margin-right: auto;
+  }
+  .footer-brand {
+    font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 700;
+    color: var(--gold); letter-spacing: 2px; margin-bottom: 8px;
+  }
+  .footer-sources {
+    font-family: 'IBM Plex Mono', monospace; font-size: 8px;
+    color: #3a3050; line-height: 2; letter-spacing: 0.3px;
+  }
+
+  /* ══════════════════════════════
+     MOBILE RESPONSIVE — max 640px
+  ══════════════════════════════ */
+  @media (max-width: 640px) {
+
+    /* Hero */
+    .hero { padding: 52px 20px 28px; }
+    .hero-brand { top: 14px; right: 16px; gap: 7px; }
+    .hero-brand-name { font-size: 10px; letter-spacing: 1px; }
+    .hero-brand-sub { display: none; }
+    .hero-logo { width: 38px; height: 38px; }
+    .hero h1 { font-size: clamp(22px, 7vw, 32px); max-width: 100%; padding-right: 60px; }
+    .hero-sub { font-size: 11px; }
+    .hero-tag { font-size: 9px; letter-spacing: 1.5px; padding: 3px 10px; }
+
+    /* Layout */
+    .content { padding: 0 14px; }
+    .section { margin-top: 28px; }
+
+    /* Section headers */
+    .section-title-text { font-size: 17px; }
+    .section-title-text span { display: none; }
+    .section-icon { width: 26px; height: 26px; font-size: 13px; }
+
+    /* KPI row — 2 colonne su mobile */
+    .kpi-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .kpi { padding: 12px 12px; }
+    .kpi-value { font-size: 16px; }
+    .kpi-label { font-size: 8px; }
+
+    /* Macro cards */
+    .macro-card-header { padding: 12px 14px 10px; flex-wrap: wrap; gap: 8px; }
+    .macro-right { gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .macro-price { font-size: 15px; }
+    .macro-name { font-size: 14px; }
+    .macro-badges { gap: 4px; }
+    .badge { font-size: 9px; padding: 2px 6px; }
+    .mc-canvas-wrap { height: 160px; padding: 8px 10px 4px; }
+    .macro-note { font-size: 11px; padding: 8px 12px 12px; }
+
+    /* Charts */
+    .chart-box { padding: 14px; }
+
+    /* Event rows — stack su mobile */
+    .event-row {
+      grid-template-columns: 48px 1fr;
+      grid-template-rows: auto auto;
+    }
+    .event-content { grid-column: 2; }
+    .event-expect {
+      grid-column: 1 / -1;
+      padding-top: 6px;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
+    }
+    .event-name { font-size: 12px; }
+    .event-day { font-size: 9px; }
+
+    /* OI Quadrant — 1 colonna su mobile */
+    .oi-quadrant { grid-template-columns: 1fr; }
+
+    /* Scenari */
+    .sc-prob { font-size: 16px; }
+    .sc-trigger, .sc-target { font-size: 11px; }
+
+    /* Outlook calendar title */
+    .outlook-calendar-title { font-size: 17px; }
+
+    /* Callout */
+    .callout { font-size: 12px; padding: 12px 14px; }
+
+    /* Footer */
+    .hero-brand-text { display: none; }
+    footer { padding: 16px; }
+    .footer-brand { font-size: 10px; }
+  }
+
+  /* ══════════════════════════════
+     TABLET — 641px to 768px
+  ══════════════════════════════ */
+  @media (min-width: 641px) and (max-width: 768px) {
+    .hero { padding: 44px 24px 28px; }
+    .content { padding: 0 18px; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .event-row { grid-template-columns: 60px 1fr; grid-template-rows: auto auto; }
+    .event-expect { grid-column: 1 / -1; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 4px; }
+    .oi-quadrant { grid-template-columns: 1fr; }
+    .sentiment-grid { grid-template-columns: 1fr; }
+    .months-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* ── SENTIMENT & STAGIONALITÀ ── */
+  .sentiment-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .sent-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px 18px; }
+  .sent-card-label { font-family:"IBM Plex Mono",monospace; font-size:8px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-bottom:12px; }
+  .fg-top-row { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; gap:10px; }
+  .fg-big { font-family:"IBM Plex Mono",monospace; font-size:44px; font-weight:600; color:#ff3d71; line-height:1; }
+  .fg-label-main { font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:700; color:#ff3d71; margin-top:4px; letter-spacing:1px; }
+  .fg-history { display:flex; flex-direction:column; gap:5px; }
+  .fg-hist-item { display:flex; align-items:center; gap:6px; }
+  .fg-hist-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .fg-hist-label { font-family:"IBM Plex Mono",monospace; font-size:8px; color:var(--muted); flex:1; }
+  .fg-hist-val { font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:600; color:var(--text); }
+  .fg-bar-wrap { position:relative; margin-bottom:14px; }
+  .fg-track { height:8px; border-radius:4px; background:linear-gradient(90deg,#ff3d71 0%,#f7931a 25%,#d4a843 50%,#4d9eff 75%,#00e5a0 100%); }
+  .fg-needle { position:absolute; top:-5px; width:2px; height:18px; background:var(--text); border-radius:1px; transform:translateX(-50%); }
+  .fg-bar-labels { display:flex; justify-content:space-between; margin-top:5px; }
+  .fg-bar-labels span { font-family:"IBM Plex Mono",monospace; font-size:7px; color:var(--muted); }
+  .sent-note { font-size:12px; color:var(--muted); line-height:1.6; padding-top:12px; border-top:1px solid var(--border); }
+  .sent-note strong { color:var(--text); }
+  .months-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; margin-bottom:12px; }
+  .m-cell { border-radius:6px; padding:6px 4px; text-align:center; }
+  .m-cell .m-name { font-family:"IBM Plex Mono",monospace; font-size:8px; letter-spacing:.5px; margin-bottom:2px; }
+  .m-cell .m-val { font-family:"IBM Plex Mono",monospace; font-size:10px; font-weight:700; }
+  .m-pos { background:rgba(0,229,160,0.12); color:#00a06e; }
+  .m-pos-strong { background:rgba(0,229,160,0.28); color:#007a4e; }
+  .m-neg { background:rgba(255,61,113,0.12); color:#cc1f56; }
+  .m-neg-strong { background:rgba(255,61,113,0.28); color:#99143f; }
+  .m-neu { background:rgba(90,80,112,0.2); color:var(--muted); }
+  .m-current { outline:2px solid var(--gold); outline-offset:1px; }
+  .stag-highlight { background:rgba(212,168,67,0.07); border:1px solid rgba(212,168,67,0.25); border-radius:10px; padding:12px 14px; margin-bottom:10px; }
+  .stag-h-label { font-family:"IBM Plex Mono",monospace; font-size:8px; color:var(--gold); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px; }
+  .stag-h-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .stag-h-val { font-family:"IBM Plex Mono",monospace; font-size:26px; font-weight:700; color:var(--green); }
+  .stag-h-sub { font-size:10px; color:var(--muted); margin-top:2px; }
+  .stag-stats-mini { display:flex; gap:8px; }
+  .stag-mini-item { background:var(--surface); border-radius:8px; padding:8px 10px; text-align:center; }
+  .stag-mini-val { display:block; font-family:"IBM Plex Mono",monospace; font-size:14px; font-weight:700; }
+  .stag-mini-val.green { color:var(--green); }
+  .stag-mini-val.red { color:var(--red); }
+  .stag-mini-lbl { font-family:"IBM Plex Mono",monospace; font-size:8px; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     HERO — ★ AGGIORNARE: hero-tag (n. edizione) + hero-sub (date)
+═══════════════════════════════════════════════════════ -->
+<div class="hero">
+  <div class="hero-topbar"></div>
+  <div class="hero-brand">
+    <div class="hero-brand-text">
+      <div class="hero-brand-name">Starter_Zero</div>
+      <div class="hero-brand-sub">AI-driven Financial Education</div>
+    </div>
+    <div class="hero-logo">
+      <img src="data:image/jpeg;base64,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" alt="Starter Zero Logo">
+    </div>
+  </div>
+  <div class="hero-tag">Report Settimanale · #013</div><!-- ★ -->
+  <h1>Bitcoin &amp;<br><span>Mercati Globali</span></h1>
+  <div class="hero-sub">Settimana 1–5 Giugno 2026 · Pubblicato 7 Giugno 2026</div><!-- ★ -->
+  <div class="hero-divider"></div>
+</div>
+
+<div class="content">
+
+  <!-- ═══════════════════════════════════════════════════════
+       SEZIONE 1 — MACRO OVERVIEW
+  ═══════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(77,158,255,0.12)">🌍</div>
+      <div class="section-title-text">Macro Overview <span>Sett. 1–5 Giugno</span></div><!-- ★ -->
+      <div class="divider"></div>
+    </div>
+
+    <!-- ★ AGGIORNARE: 3 badge + 5 statistiche con classe up/down/neu -->
+    <div class="tema-box" id="tema-settimana">
+      <div class="tema-header">
+        <span class="tema-label">📋 Tema della Settimana</span>
+        <div class="tema-badges-row">
+          <span class="tema-badge fed">💼 NFP +172k shock</span><!-- ★ -->
+          <span class="tema-badge btc">📉 BTC −14% sett.</span><!-- ★ -->
+          <span class="tema-badge iran">🤖 AI selloff −$1T</span><!-- ★ -->
+        </div>
+      </div>
+      <div class="tema-body" id="tema-testo"></div><!-- NON TOCCARE: popolato dal JS -->
+      <div class="tema-stats">
+        <div class="tema-stat"><span class="ts-label">S&P 500</span><span class="ts-val down">−2.6%</span></div>
+        <div class="tema-stat"><span class="ts-label">Oro</span><span class="ts-val down">−3.1%</span></div>
+        <div class="tema-stat"><span class="ts-label">BTC</span><span class="ts-val down">−14%</span></div>
+        <div class="tema-stat"><span class="ts-label">DXY</span><span class="ts-val up">+0.6%</span></div>
+        <div class="tema-stat"><span class="ts-label">ETF Flussi</span><span class="ts-val down">−$780M</span></div>
+      </div>
+    </div>
+
+    <!-- MACRO CARDS: id= vuoti, popolati dal JS via W.spx/gold/dxy/vwce -->
+    <div class="macro-stack">
+
+      <div class="macro-card open" style="--accent:var(--red)" id="card-spx">
+        <div class="macro-card-header" onclick="toggleMacro('spx')"><!-- UN SOLO PARAMETRO -->
+          <div class="macro-left"><div class="macro-name">S&amp;P 500</div><div class="macro-ticker">SPX · US Equities</div></div>
+          <div class="macro-right">
+            <div class="macro-badges">
+              <span class="badge down" id="badge1-spx"></span>
+              <span class="badge down" id="badge2-spx"></span>
+            </div>
+            <div class="macro-price" style="color:var(--red)" id="price-spx"></div>
+            <div class="macro-chevron">▼</div>
+          </div>
+        </div>
+        <div class="macro-chart-wrap">
+          <div class="mc-canvas-wrap"><canvas id="chartSpx"></canvas></div>
+          <div class="macro-note" id="note-spx"></div><!-- NON TOCCARE: popolato dal JS -->
+        </div>
+      </div>
+
+      <div class="macro-card open" style="--accent:var(--gold)" id="card-gold">
+        <div class="macro-card-header" onclick="toggleMacro('gold')">
+          <div class="macro-left"><div class="macro-name">Oro</div><div class="macro-ticker">XAU/USD · Commodities</div></div>
+          <div class="macro-right">
+            <div class="macro-badges">
+              <span class="badge up" id="badge1-gold"></span>
+              <span class="badge up" id="badge2-gold"></span>
+            </div>
+            <div class="macro-price" style="color:var(--gold)" id="price-gold"></div>
+            <div class="macro-chevron">▼</div>
+          </div>
+        </div>
+        <div class="macro-chart-wrap">
+          <div class="mc-canvas-wrap"><canvas id="chartGold"></canvas></div>
+          <div class="macro-note" id="note-gold"></div>
+        </div>
+      </div>
+
+      <div class="macro-card open" style="--accent:var(--blue)" id="card-dxy">
+        <div class="macro-card-header" onclick="toggleMacro('dxy')">
+          <div class="macro-left"><div class="macro-name">Dollaro USA</div><div class="macro-ticker">DXY · Dollar Index</div></div>
+          <div class="macro-right">
+            <div class="macro-badges">
+              <span class="badge neu" id="badge1-dxy"></span>
+              <span class="badge neu" id="badge2-dxy"></span>
+            </div>
+            <div class="macro-price" style="color:var(--blue)" id="price-dxy"></div>
+            <div class="macro-chevron">▼</div>
+          </div>
+        </div>
+        <div class="macro-chart-wrap">
+          <div class="mc-canvas-wrap"><canvas id="chartDxy"></canvas></div>
+          <div class="macro-note" id="note-dxy"></div>
+        </div>
+      </div>
+
+      <div class="macro-card open" style="--accent:var(--green)" id="card-vwce">
+        <div class="macro-card-header" onclick="toggleMacro('vwce')">
+          <div class="macro-left"><div class="macro-name">VWCE</div><div class="macro-ticker">VWCE.DE · Vanguard FTSE All-World · XETRA (€)</div></div>
+          <div class="macro-right">
+            <div class="macro-badges">
+              <span class="badge up" id="badge1-vwce"></span>
+              <span class="badge up" id="badge2-vwce"></span>
+            </div>
+            <div class="macro-price" style="color:var(--green)" id="price-vwce"></div>
+            <div class="macro-chevron">▼</div>
+          </div>
+        </div>
+        <div class="macro-chart-wrap">
+          <div class="mc-canvas-wrap"><canvas id="chartVwce"></canvas></div>
+          <div class="macro-note" id="note-vwce"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SEZIONE 2 — ETF SPOT BTC
+       ★ AGGIORNARE: subtitle + 4 KPI + 2 badge + nota daily
+  ═══════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(247,147,26,0.12)">₿</div>
+      <div class="section-title-text">ETF Spot BTC — Flussi &amp; Prezzo <span>Sett. 1–5 Giugno</span></div><!-- ★ -->
+      <div class="divider"></div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi" style="--accent:var(--green)">
+        <div class="kpi-label">Flusso Netto Sett.</div>
+        <div class="kpi-value" id="etf-flusso">−$780M</div>
+        <div class="kpi-delta down">Streak record finito gio 4</div>
+      </div>
+      <div class="kpi" style="--accent:var(--orange)">
+        <div class="kpi-label">BTC Inizio Sett.</div>
+        <div class="kpi-value" id="etf-btc-inizio">$73,300</div>
+        <div class="kpi-delta neu">Ven 29 Mag (close prec.)</div>
+      </div>
+      <div class="kpi" style="--accent:var(--blue)">
+        <div class="kpi-label">BTC Fine Sett.</div>
+        <div class="kpi-value" id="etf-btc-fine">$62,875</div>
+        <div class="kpi-delta down">−14% sett.</div>
+      </div>
+      <div class="kpi" style="--accent:var(--gold)">
+        <div class="kpi-label">AUM Totale ETF</div>
+        <div class="kpi-value" id="etf-aum">$80.5B</div>
+        <div class="kpi-delta down">−$13B vs. prec.</div>
+      </div>
+    </div>
+
+    <div class="macro-stack">
+
+      <div class="macro-card open" style="--accent:var(--green)" id="card-etf-daily">
+        <div class="macro-card-header" onclick="toggleMacro('etf-daily')">
+          <div class="macro-left">
+            <div class="macro-name">Flussi Giornalieri</div>
+            <div class="macro-ticker">ETF Spot BTC · Sett. 1–5 Giugno</div><!-- ★ -->
+          </div>
+          <div class="macro-right">
+            <div class="macro-badges">
+              <span class="badge down">−$780M totale</span>
+              <span class="badge down">Mer 3: −$397M</span>
+            </div>
+            <div class="macro-chevron">▼</div>
+          </div>
+        </div>
+        <div class="macro-chart-wrap">
+          <div class="mc-canvas-wrap" style="height:180px"><canvas id="chartEtfDaily"></canvas></div>
+          <div class="macro-note">La settimana ha visto la <strong>fine del peggiore outflow streak della storia degli ETF: 13 giorni consecutivi (15 mag – 3 giu) per $4,4B totali</strong>. Lunedì 1 e martedì 2 ancora in rosso, <strong>mercoledì 3 il colpo da −$397M (IBIT −$342M)</strong>, poi giovedì 4 lo streak si interrompe con un simbolico +$3M, venerdì 5 di nuovo debole. Nei 13 giorni IBIT ha pesato per $3,3B (75% del totale). <strong>L'AUM aggregato è crollato da $104B (15 mag) a ~$80B</strong>: $24B in tre settimane tra riscatti e calo prezzo. I flussi 2026 sono diventati negativi per la prima volta dal lancio. <strong>Ma il cumulativo dal 2024 resta sopra $55B</strong>: è una correzione di momentum, non un collasso strutturale.</div><!-- ★ -->
+        </div>
+      </div>
+
+      <div class="macro-card open" style="--accent:var(--orange)" id="card-etf-ytd">
+        <div class="macro-card-header" onclick="toggleMacro('etf-ytd')">
+          <div class="macro-left">
+            <div class="macro-name">Flussi Settimanali YTD 2026</div>
+            <div class="macro-ticker">ETF Spot BTC · Gen–Mese 2026</div>
+          </div>
+          <div class="macro-right">
+            <div class="macro-badges">
+              <span class="badge down">−$4.5B gen–feb</span>
+              <span class="badge up">Rimbalzo recente</span>
+            </div>
+            <div class="macro-chevron">▼</div>
+          </div>
+        </div>
+        <div class="macro-chart-wrap">
+          <div class="mc-canvas-wrap" style="height:180px"><canvas id="chartEtfYtd"></canvas></div>
+          <div class="macro-note">Il prezzo BTC segue fedelmente la direzione dei flussi ETF su base settimanale.</div>
+        </div>
+      </div>
+
+      <div class="macro-card open" style="--accent:var(--blue)" id="card-etf-breakdown">
+        <div class="macro-card-header" onclick="toggleMacro('etf-breakdown')">
+          <div class="macro-left">
+            <div class="macro-name">Dettaglio per ETF</div>
+            <div class="macro-ticker">Flussi netti · Sett. 1–5 Giugno</div>
+          </div>
+          <div class="macro-right">
+            <div class="macro-badges">
+              <span class="badge down">IBIT −$550M</span>
+              <span class="badge down">FBTC −$140M</span>
+            </div>
+            <div class="macro-chevron">▼</div>
+          </div>
+        </div>
+        <div class="macro-chart-wrap">
+          <div class="mc-canvas-wrap" style="height:180px"><canvas id="chartEtfBreakdown"></canvas></div>
+          <div class="macro-note"><strong>BlackRock IBIT</strong> mantiene la leadership. Grayscale GBTC strutturalmente penalizzato dalle fee più alte (1.5% vs 0.25% IBIT).</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="callout" style="--callout-color:var(--green)" id="callout-etf"></div><!-- popolato dal JS -->
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SEZIONE 3 — SENTIMENT & STAGIONALITÀ
+       Tutto popolato dal JS — NON toccare i div id=
+  ═══════════════════════════════════════════════════════ -->
+  <div class="section" id="section-sentiment">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(212,168,67,0.12)">🧠</div>
+      <div class="section-title-text">Sentiment &amp; Stagionalità <span>BTC · Giugno 2026</span></div>
+      <div class="divider"></div>
+    </div>
+    <div class="sentiment-grid">
+      <div class="sent-card">
+        <div class="sent-card-label">Fear &amp; Greed Index — Alternative.me</div>
+        <div class="fg-top-row">
+          <div>
+            <div class="fg-big" id="fg-number">--</div>
+            <div class="fg-label-main" id="fg-label">--</div>
+          </div>
+          <div class="fg-history">
+            <div class="fg-hist-item"><span class="fg-hist-dot" style="background:#ff3d71"></span><span class="fg-hist-label">1 sett. fa</span><span class="fg-hist-val" id="fg-prev1">--</span></div>
+            <div class="fg-hist-item"><span class="fg-hist-dot" style="background:#f7931a"></span><span class="fg-hist-label">30 giorni fa</span><span class="fg-hist-val" id="fg-prev2">--</span></div>
+            <div class="fg-hist-item"><span class="fg-hist-dot" style="background:#5a5070"></span><span class="fg-hist-label">Min storico</span><span class="fg-hist-val">6</span></div>
+          </div>
+        </div>
+        <div class="fg-bar-wrap">
+          <div class="fg-track"></div>
+          <div class="fg-needle" id="fg-needle"></div>
+          <div class="fg-bar-labels"><span>Extreme Fear</span><span>Fear</span><span>Neutral</span><span>Greed</span><span>Extreme Greed</span></div>
+        </div>
+        <div class="sent-note" id="fg-note"></div>
+      </div>
+      <div class="sent-card">
+        <div class="sent-card-label">Stagionalità storica BTC · Media 2013–2024 · Fonte: Matrixport / CoinDesk</div>
+        <div class="months-grid" id="months-grid"></div>
+        <div class="stag-highlight">
+          <div class="stag-h-label">Mese corrente</div>
+          <div class="stag-h-row">
+            <div>
+              <div class="stag-h-val" id="stag-media">+0%</div>
+              <div class="stag-h-sub">rendimento medio storico</div>
+            </div>
+            <div class="stag-stats-mini">
+              <div class="stag-mini-item"><span class="stag-mini-val green" id="stag-pos">0/10</span><span class="stag-mini-lbl">anni positivi</span></div>
+              <div class="stag-mini-item"><span class="stag-mini-val red" id="stag-neg">0/10</span><span class="stag-mini-lbl">anni negativi</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="sent-note" id="stag-note"></div>
+      </div>
+    </div>
+    <div class="callout" style="--callout-color:var(--gold); margin-top:14px" id="callout-sentiment"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SEZIONE 4 — OPEN INTEREST & FUNDING RATE
+       ★ AGGIORNARE: 4 KPI + 2 badge OI + quadrante active-quad
+  ═══════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(167,139,250,0.12)">📊</div>
+      <div class="section-title-text">Open Interest &amp; Funding Rate <span>Derivati BTC</span></div>
+      <div class="divider"></div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi" style="--accent:var(--purple)">
+        <div class="kpi-label">OI Aggregato</div>
+        <div class="kpi-value" id="oi-aggregato">~$46.0B</div>
+        <div class="kpi-delta down">−15% su liquidazioni</div>
+      </div>
+      <div class="kpi" style="--accent:var(--red)">
+        <div class="kpi-label">Funding Rate</div>
+        <div class="kpi-value" id="oi-fr">−0.012%</div>
+        <div class="kpi-delta down">Negativo estremo</div>
+      </div>
+      <div class="kpi" style="--accent:var(--blue)">
+        <div class="kpi-label">Liquidazioni</div>
+        <div class="kpi-value" id="oi-shortwall">$1.5B</div>
+        <div class="kpi-delta down">Long spazzati su $62k</div>
+      </div>
+      <div class="kpi" style="--accent:var(--orange)">
+        <div class="kpi-label">Segnale</div>
+        <div class="kpi-value" id="oi-segnale">Q4</div>
+        <div class="kpi-delta neu">Capitolazione, contrarian</div>
+      </div>
+    </div>
+
+    <div class="macro-stack">
+      <div class="macro-card open" style="--accent:var(--purple)" id="card-oi">
+        <div class="macro-card-header" onclick="toggleMacro('oi')">
+          <div class="macro-left">
+            <div class="macro-name">Open Interest + Funding Rate</div>
+            <div class="macro-ticker">BTC Derivati · Sett. 1–5 Giugno</div>
+          </div>
+          <div class="macro-right">
+            <div class="macro-badges">
+              <span class="badge" style="background:rgba(167,139,250,0.12);color:var(--purple)">OI $46.0B ↓</span>
+              <span class="badge down">FR −0.012%</span>
+            </div>
+            <div class="macro-chevron">▼</div>
+          </div>
+        </div>
+        <div class="macro-chart-wrap">
+          <div class="mc-canvas-wrap" style="height:180px"><canvas id="chartOI"></canvas></div>
+          <div class="macro-note">
+            <strong>Come leggere:</strong> linea viola = Open Interest. Barre = Funding Rate —
+            <span style="color:var(--green)">verde = leva long</span>,
+            <span style="color:var(--red)">rosso = leva short</span>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      ★ AGGIORNARE: sposta class="active-quad" sul quadrante corretto.
+      REGOLA: active-quad ha bordo blu + badge "SIAMO QUI" — UNO solo alla volta.
+      Rimuovi active-quad dal quadrante attuale e aggiungilo a quello nuovo.
+      Assicurati che W.oi.segnale e il KPI id="oi-segnale" siano coerenti.
+    -->
+    <div class="oi-quadrant">
+      <div class="oi-quad" style="border-color:rgba(0,229,160,0.25)">
+        <div class="oiq-row"><span class="oiq-icon-sm">📈</span><span class="oiq-title" style="color:var(--green)">Q1 · Bullish</span></div>
+        <div class="oiq-sub">OI ↑ · FR +</div><div class="oiq-desc">Long dominanti, trend confermato</div>
+      </div>
+      <div class="oi-quad" style="border-color:rgba(255,61,113,0.25)">
+        <div class="oiq-row"><span class="oiq-icon-sm">📉</span><span class="oiq-title" style="color:var(--red)">Q2 · Bearish</span></div>
+        <div class="oiq-sub">OI ↑ · FR −</div><div class="oiq-desc">Short dominanti, rischio squeeze</div>
+      </div>
+      <div class="oi-quad" style="border-color:rgba(77,158,255,0.25)">
+        <div class="oiq-row"><span class="oiq-icon-sm">⚡</span><span class="oiq-title" style="color:var(--blue)">Q3 · Transizione</span></div>
+        <div class="oiq-sub">OI ↓ · FR −</div><div class="oiq-desc">Scarico leva, non ancora capitolazione</div>
+      </div>
+      <div class="oi-quad active-quad"><!-- ← SIAMO QUI: Q4 capitolazione -->
+        <div class="oiq-badge">SIAMO QUI</div>
+        <div class="oiq-row"><span class="oiq-icon-sm">🏳️</span><span class="oiq-title" style="color:var(--muted)">Q4 · Capitolazione</span></div>
+        <div class="oiq-sub">OI ↓ · FR −</div><div class="oiq-desc">Posizioni chiuse, segnale contrarian</div>
+      </div>
+    </div>
+
+    <div class="callout" style="--callout-color:var(--purple)" id="callout-oi"></div><!-- popolato dal JS -->
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SEZIONE 5 — OUTLOOK
+       ★ AGGIORNARE: solo calendar-title (date)
+       Il resto è popolato dal JS via W.outlook — NON toccare
+  ═══════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(247,147,26,0.1)">🔭</div>
+      <div class="section-title-text">Outlook <span id="outlook-periodo"></span></div>
+      <div class="divider"></div>
+    </div>
+    <div class="outlook-calendar-title" id="calendar-title">📅 Calendario Macro — Settimana 8–12 Giugno</div>
+    <div class="events-stack" id="events-stack"></div><!-- popolato dal JS -->
+    <div class="outlook-calendar-title" style="margin-top:20px">⚡ Scenari BTC per la Settimana</div>
+    <div class="scenarios" id="scenari-stack"></div><!-- popolato dal JS -->
+    <div class="callout" style="--callout-color:var(--orange); margin-top:16px" id="nota-editoriale"></div><!-- popolato dal JS -->
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-brand">STARTER_ZERO · AI-driven Financial Education &amp; Crypto Solutions</div>
+  <div class="footer-sources">
+    Fonti: SoSoValue · Farside Investors · TradingEconomics · CoinGlass · Alternative.me · Matrixport/CoinDesk<br>
+    Prezzi e dati indicativi (snapshot settimanali) · Dati per singolo ETF da aggregati pubblici<br>
+    Questo report è prodotto a scopo informativo e non costituisce consulenza finanziaria ·
+    Edizione <span id="footer-edizione">#013 · 7 Giugno 2026</span>
+  </div>
+</footer>
+
+<script>
+// ╔══════════════════════════════════════════════════════════════╗
+// ║           BLOCCO DATI SETTIMANALE — AGGIORNA QUI            ║
+// ║  Ogni domenica sostituisci SOLO i valori in questa sezione  ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+const W = {
+
+  edizione:    '#013',
+  periodo:     '1–5 Giu 2026',
+  pubblicato:  '7 Giugno 2026',
+
+  tema: `Settimana di capitolazione per il crypto, di reversal per l'azionario. <strong>Venerdì 5 giugno il NFP di maggio esplode a +172.000 posti — il doppio del consensus (85k)</strong>, con revisioni al rialzo dei mesi precedenti (+93k netti) che ribaltano il trend di revisioni negative. Un mercato del lavoro così forte uccide ogni speranza di taglio Fed nel 2026: i Treasury 20y e 30y tornano sopra il 5%, il dollaro sale (+0,65% nella giornata). <strong>Per Bitcoin è la settimana peggiore da febbraio: −14% a $62.875</strong>, con la rottura in sequenza dei supporti $68k, $65k e infine $62k, che ha innescato $1,5 miliardi di liquidazioni long. BTC è ora −22% dal picco di metà maggio ($82k) e oltre −50% sotto il massimo storico di ottobre 2025 ($128k). <strong>Parallelamente, l'azionario vive un brusco AI selloff</strong>: il Nasdaq crolla −4,18% venerdì (semiconduttori −10%, ~$1.000 miliardi di capitalizzazione bruciati), Broadcom delude sugli AI chip, Meta annuncia un aumento di capitale. L'S&P interrompe la striscia di 9 settimane positive (−2,6% sett), il VIX salta a 21,5 (+40%). <strong>Michael Saylor ha venduto 32 BTC</strong> — il primo sell di Strategy dal 2022 — per finanziare i dividendi sulle azioni privilegiate. Tutto questo è capitolazione da manuale: RSI a 18 (estremo oversold), Fear & Greed a 12 (Extreme Fear), funding negativo, OI in crollo. Storicamente sono le condizioni dei minimi locali — ma servono conferme, non scommesse.`,
+
+  spx: {
+    price: '7,384',
+    badge1: '−2.6% sett.', badge1type: 'down',
+    badge2: '+6.6% YTD',  badge2type: 'up',
+    labels: ['15M','18M','19M','20M','21M','22M','26M','27M','28M','29M','1G','2G','3G','4G','5G'],
+    closes: [7408,7403,7415,7461,7446,7473, 7490,7505,7555,7580, 7595,7632,7580,7584,7384],
+    note: `<strong>Interrotta la striscia di 9 settimane positive consecutive.</strong> L'inizio settimana prosegue il rally: martedì 2 giugno l'S&P tocca un nuovo massimo storico a 7.632 (nona seduta positiva di fila, la più lunga in oltre un anno). Poi il vento gira: mercoledì 3 e giovedì 4 parte il selloff dei semiconduttori dopo che <strong>Broadcom delude sulle stime AI chip</strong>, alimentando dubbi sulla sostenibilità delle valutazioni del settore. <strong>Venerdì 5 il crollo: S&P −2,64% a 7.384, Nasdaq −4,18% a 25.709</strong> (il Philadelphia Semiconductor −10%), circa $1.000 miliardi di capitalizzazione persi. Il NFP forte ha aggiunto benzina: niente tagli Fed = valutazioni tech sotto pressione. Meta annuncia un aumento di capitale (−7%) dopo gli $80B di Alphabet. VIX +40% a 21,5. Difensivi unico rifugio. <strong>Resistenza 7.500, supporto 7.250.</strong> L'S&P resta comunque +25% su base annua: rotazione di leadership, non debolezza strutturale.`
+  },
+
+  gold: {
+    price: '$4,339',
+    badge1: '−3.1% sett.', badge1type: 'down',
+    badge2: '+30% 1Y',     badge2type: 'up',
+    labels: ['15M','18M','19M','20M','21M','22M','26M','27M','28M','29M','1G','2G','3G','4G','5G'],
+    closes: [4562,4548,4535,4528,4542,4523, 4505,4495,4488,4480, 4470,4455,4445,4485,4339],
+    note: `<strong>Sell-off di −3,1% sulla settimana, minimo da marzo 2026.</strong> Anche l'oro è vittima del NFP shock: venerdì 5 perde −3,27% a $4.339, con un range intraday violentissimo ($4.312-$4.482). La logica è la stessa che penalizza BTC: un mercato del lavoro forte allontana i tagli Fed, fa salire i rendimenti reali e rafforza il dollaro (+0,65%), tutti fattori negativi per gli asset non-remunerativi. Da inizio guerra Iran l'oro è ora a circa −22% dal picco di gennaio ($5.589). Il petrolio Brent è sceso a $93 sullo stallo dei colloqui Iran. <strong>Supporto critico $4.300</strong> (sotto qui apertura verso $4.180). Resistenza $4.450-$4.510. Le banche centrali continuano gli acquisti netti record, sostegno strutturale di lungo periodo nonostante i venti contrari di breve.`
+  },
+
+  dxy: {
+    price: '99.90',
+    badge1: '+0.6% sett.', badge1type: 'up',
+    badge2: '+1.7% YTD',  badge2type: 'up',
+    labels: ['15M','18M','19M','20M','21M','22M','26M','27M','28M','29M','1G','2G','3G','4G','5G'],
+    closes: [99.27,99.45,99.38,99.25,99.20,99.32, 99.40,99.35,99.28,99.30, 99.35,99.25,99.40,99.30,99.90],
+    note: `<strong>Il dollaro torna in forza sul NFP shock.</strong> Dopo una settimana di consolidamento intorno a 99,30, venerdì 5 il DXY balza +0,65% sulla giornata avvicinandosi a quota 100, spinto dal mercato del lavoro che riprezza la Fed verso "higher for longer" o addirittura un possibile hike. I Treasury 20y e 30y tornano sopra il 5%. <strong>La soglia psicologica 100 è il vero spartiacque</strong>: una rottura decisa sopra comprimerebbe ulteriormente la liquidità globale e peserebbe su BTC, oro ed emergenti. La correlazione inversa DXY-BTC resta il driver dominante di breve. <strong>Resistenza 100,00-100,50, supporto 99,00.</strong> Il prossimo test è il CPI di mercoledì 10: un dato caldo (sopra 3,6%) spingerebbe il DXY verso 107; un dato freddo (sotto 3,0%) lo riporterebbe verso 99 e darebbe ossigeno agli asset rischiosi.`
+  },
+
+  vwce: {
+    price: '€144.20',
+    badge1: '−2.4% sett.', badge1type: 'down',
+    badge2: '+6.8% 1Y',    badge2type: 'up',
+    labels: ['15M','18M','19M','20M','21M','22M','26M','27M','28M','29M','1G','2G','3G','4G','5G'],
+    closes: [146.50,146.90,147.20,147.50,147.30,147.80, 147.90,148.00,148.20,148.10, 148.30,148.50,147.60,147.20,144.20],
+    note: `Settimana negativa (−2,4%) trascinata dal crollo tech USA di venerdì. <strong>Il selloff dei semiconduttori ha colpito duramente la componente USA del fondo (~62%)</strong>, con il Nasdaq −4,18% nella sola giornata di venerdì. Europa più resiliente in settimana ma comunque giù: DAX −1,5%, CAC −1,2% nel giorno del selloff globale. Asia mista prima del crollo, poi in scia negativa. Il dato VWCE resta comunque +6,8% su base annua. Da ATH €151 di gennaio, il fondo è ora a −4,5%. <strong>Resistenza €147-€148, supporto €142</strong>. Per l'investitore in PAC questa settimana significa semplicemente quote acquistate a prezzo più basso — il meccanismo funziona esattamente così.`
+  },
+
+  etf: {
+    flussoNetto:  '−$780M',
+    btcInizio:    '$73,300',
+    btcFine:      '$62,875',
+    btcDelta:     '−14% sett.',
+    aumTotale:    '$80.5B',
+    aumDelta:     '−$13B vs. prec.',
+
+    dailyLabels: ['Lun 1','Mar 2','Mer 3','Gio 4','Ven 5'],
+    dailyFlows:  [-300, -89, -397, 3, -55],
+    dailyBtc:    [70500, 68000, 65500, 64000, 62875],
+
+    ytdLabels: ['W4F','W1M','W2M','W3M','W4M','W1A','W2A','W3A','W4A','W1Mag','W2Mag','W3Mag','W4Mag','W5Mag','W1Giu'],
+    ytdFlows:  [-210,767,401,271,-70,786,996,250,824,-405,2130,-1000,-900,-1300,-780],
+
+    emittenti: ['BlackRock IBIT','Fidelity FBTC','ARK/21Sh ARKB','Bitwise BITB','Morgan Stanley MSBT','Grayscale GBTC'],
+    emittentiFlussi: [-550, -140, -45, -25, -10, -50],
+
+    calloutETF: `<strong>Si è chiuso il capitolo più nero della storia degli ETF spot: 13 giorni consecutivi di deflussi (15 mag – 3 giu) per $4,4 miliardi totali</strong>, secondo i dati Galaxy Research e Bloomberg. È la striscia più lunga e profonda da quando i prodotti esistono (gennaio 2024). IBIT di BlackRock ha pesato per $3,3B (75% del totale), FBTC per $456M, GBTC per $303M. <strong>L'AUM aggregato è precipitato da $104,29B (15 mag) a circa $80B</strong>, una contrazione di oltre $24B in tre settimane tra riscatti e crollo del prezzo. I flussi netti del 2026 sono diventati negativi per la prima volta dal lancio. <strong>Il dato che però conta: il cumulativo lifetime resta sopra $55B</strong> (Eric Balchunas, Bloomberg) — meno di $10B sotto il massimo storico. In altre parole, tre settimane di vendite hanno restituito una frazione di due anni di accumulo. Lo streak si è interrotto giovedì 4 con un simbolico +$3M. Standard Chartered ha dichiarato che "il fondo di Bitcoin è vicino, il mercato entra in zona di acquisto".`
+  },
+
+  sentiment: {
+    fearGreed:      12,
+    fearGreedLabel: 'Extreme Fear',
+    fearGreedPrev1: 28,
+    fearGreedPrev2: 40,
+    note: `Fear & Greed crolla a <strong>12 (Extreme Fear)</strong> — il livello più basso da inizio aprile. La discesa 40 → 28 → 12 nelle ultime tre settimane traccia il crash di BTC da $73k a $62k. <strong>Storicamente, letture sotto 15 sono tra le più rare e segnano spesso i minimi locali</strong>: l'ultima volta sotto 15 (inizio aprile a quota 8) BTC ripartì verso $82k nelle settimane successive. Questo non garantisce nulla — il sentiment non è timing — ma è un dato di contesto importante. Sul fronte tecnico: RSI giornaliero a 18 (estremo oversold, zona storica di rimbalzi tattici), prezzo sotto tutte le medie mobili principali, 200-week MA a $60-61k come supporto di lunghissimo periodo. <strong>I desk OTC riferiscono accumulo silenzioso da parte di fondi long-term nella zona $63-67k</strong>, con orizzonte 18 mesi. Per chi esegue un PAC, questa è precisamente la fase in cui il piano automatico dà il suo valore maggiore: stai comprando a sentiment 12, non a sentiment 70.`,
+    callout: `Fear &amp; Greed a <strong>12/100 — Extreme Fear</strong>, minimo da inizio aprile. RSI a 18 (estremo oversold), $1,5B di long liquidati, OI in crollo: è capitolazione da manuale. Storicamente queste condizioni coincidono con minimi locali (non garanzie). <strong>Il PAC esiste esattamente per settimane come questa: comprare quando fa più paura, in automatico, senza dover decidere.</strong> Standard Chartered parla di "zona di acquisto"; i desk OTC accumulano a $63-67k. Nessuna scommessa: solo disciplina.`
+  },
+
+  stagionalita: {
+    meseCorrente: 'Giugno',
+    mediaStorica:  '+2%',
+    anniPositivi:  '5/10',
+    anniNegativi:  '5/10',
+    mesi: [
+      { nome:'GEN', val:+14, cls:'m-pos-strong' },
+      { nome:'FEB', val:+8,  cls:'m-pos' },
+      { nome:'MAR', val:+1,  cls:'m-neu' },
+      { nome:'APR', val:+17, cls:'m-pos-strong' },
+      { nome:'MAG', val:+6,  cls:'m-pos' },
+      { nome:'GIU', val:+2,  cls:'m-neu', current:true },
+      { nome:'LUG', val:+7,  cls:'m-pos' },
+      { nome:'AGO', val:-2,  cls:'m-neg' },
+      { nome:'SET', val:-7,  cls:'m-neg-strong' },
+      { nome:'OTT', val:+24, cls:'m-pos-strong' },
+      { nome:'NOV', val:+15, cls:'m-pos-strong' },
+      { nome:'DIC', val:+4,  cls:'m-pos' },
+    ],
+    note: `Dati: Matrixport / CoinDesk (2013–2024). <strong>Giugno è mese debole-neutro</strong>: +2% di media storica, 5 positivi su 10. È l'anticamera delle "summer doldrums" (giu-set), il periodo stagionalmente più fiacco per BTC, con settembre l'unico mese strutturalmente negativo (−7%). <strong>Maggio 2026 si è chiuso a −8% per BTC, e la prima settimana di giugno aggiunge −14%</strong>: il drawdown da metà maggio è ormai del 22%. Lo scenario ricorda le correzioni di mid-cycle del 2021 e 2024, da cui BTC poi ripartì. Ma serve un catalizzatore positivo: il CPI di mercoledì 10 e il FOMC del 17 giugno saranno decisivi per capire se giugno chiude la fase di capitolazione o la prolunga.`
+  },
+
+  oi: {
+    oiAggregato:  '~$46.0B',
+    oiDelta:      '−15% su liquidazioni',
+    fundingRate:  '−0.012%',
+    shortWall:    '$1.5B',
+    segnale:      'Q4',
+
+    labels:  ['Lun 1','Mar 2','Mer 3','Gio 4','Ven 5'],
+    oiData:  [53.0, 51.5, 49.0, 47.5, 46.0],
+    frData:  [-0.005, -0.007, -0.010, -0.011, -0.012],
+
+    callout: `<strong>Capitolazione conclamata: l'OI crolla di circa −$8B sulla settimana ($54B → $46B), il calo più violento da febbraio.</strong> La rottura di $62k venerdì ha innescato $1,5 miliardi di liquidazioni long in poche ore — i tori a leva sono stati spazzati via. Il funding rate è negativo estremo a −0,012%, segno che chi resta è prevalentemente posizionato short e il mercato paga per shortare. <strong>Questo è il quadrante Q4: posizioni chiuse, leva azzerata, segnale contrarian.</strong> Storicamente è la fase in cui si formano i minimi, perché quando tutti i long deboli sono stati liquidati resta poca benzina per ulteriori ribassi forzati. RSI giornaliero a 18 (estremo oversold). La 200-week MA a $60-61k è il supporto strutturale di lunghissimo periodo da difendere. <strong>Attenzione: Q4 non è un segnale di acquisto automatico</strong> — è una condizione di esaurimento che può precedere sia un rimbalzo sia un ultimo capitolo ribassista verso $59-60k (full Fibonacci retracement). Resistenza $65k-$68k (ex supporti diventati resistenze), supporto $60k-$62k.`
+  },
+
+  outlook: {
+    periodo: '8–12 Giugno 2026',
+
+    eventi: [
+      { giorno:'LUN 8', nome:'Apple WWDC + Consumer Inflation Expectations', meta:'Apple · NY Fed · 🟡 Medio impatto', desc:'Apertura della WWDC di Apple (8-12 giugno), focus su AI e Siri — rilevante per il sentiment tech dopo il selloff dei semiconduttori. NY Fed Consumer Inflation Expectations: misura le aspettative di inflazione a 1 e 3 anni, sub-indicatore osservato dalla Fed.', highlight:false },
+      { giorno:'MAR 9', nome:'EIA Short-Term Energy Outlook + dati OPEC', meta:'EIA · OPEC · 🟡 Basso-medio impatto', desc:'Con il Brent a $93 e lo stallo dei colloqui Iran, i dati su energia e produzione OPEC restano rilevanti per l\'outlook inflazione. L\'energia è stata il driver principale degli ultimi CPI/PCE elevati.', highlight:false },
+      { giorno:'MER 10', nome:'⚠️ CPI Maggio + Oracle Q4 Earnings', meta:'BLS · Oracle · 🔴 Massimo impatto', desc:'Il dato della settimana. Core CPI attuale a 2,8% YoY, headline a 3,8%. Tre scenari: caldo (>3,6%) elimina ogni taglio 2026 e spinge DXY verso 107 con BTC verso mid-$60k; in linea; freddo (<3,0%) riprezza fino a 3 tagli e dà ossigeno agli asset rischiosi. Oracle riporta dopo la chiusura: focus su crescita cloud OCI.', highlight:true },
+      { giorno:'GIO 11', nome:'⚠️ PPI Maggio + Initial Jobless Claims', meta:'BLS · DOL · 🔴 Alto impatto', desc:'Il PPI di aprile era a +6% YoY (massimo da marzo 2022). Una conferma di pressioni sui prezzi alla produzione rinforzerebbe lo scenario "higher for longer". Claims attese ~215k. Insieme al CPI definisce il quadro inflazione pre-FOMC.', highlight:true },
+      { giorno:'VEN 12', nome:'UMich Inflation Expectations Giugno', meta:'University of Michigan · USA · 🟡 Medio impatto', desc:'Aspettative di inflazione a 1 anno: il sub-indicatore più sensibile. Sopra il 5% sarebbe un campanello d\'allarme per la Fed. Chiude la settimana macro che prepara il FOMC del 17 giugno.', highlight:false },
+    ],
+
+    scenari: [
+      { tipo:'bull', tag:'SCENARIO RIALZISTA', tagClass:'bull-tag', prob:'35%', trigger:'CPI freddo (<3,2%) + DXY sotto 99 + ETF tornano in inflow + BTC tiene $60k + capitolazione esaurita (RSI 18, F&G 12 = minimo locale)', target:'$68k → $72k · rimbalzo da minimo contrarian · S&P recupera 7.500 · oro verso $4.500' },
+      { tipo:'base', tag:'SCENARIO BASE',      tagClass:'base-tag', prob:'40%', trigger:'CPI in linea (~3,5%) · DXY laterale 99-100 · ETF flussi neutrali · BTC consolida $60k-$66k · leva azzerata stabilizza il mercato', target:'Range $60k-$66k · costruzione base sopra 200-week MA · attesa del FOMC del 17 giugno · S&P 7.300-7.500' },
+      { tipo:'bear', tag:'SCENARIO RIBASSISTA', tagClass:'bear-tag', prob:'25%', trigger:'CPI caldo (>3,6%) + PPI ancora elevato + DXY rompe 100 + perdita $60k + AI selloff continua', target:'$56k-$60k · rottura 200-week MA · full Fibonacci a $59,7k · S&P verso 7.150 · oro testa $4.180' },
+    ],
+
+    nota: `Questa è una settimana difficile, e ha senso dirlo con chiarezza: BTC −14%, il peggior risultato da febbraio, con $1,5 miliardi di posizioni long spazzate via. Ma è importante leggere cosa è successo davvero. <strong>Il crollo non nasce dal crypto: nasce dal NFP +172k che ha ucciso le speranze di taglio Fed</strong>, ha fatto salire i rendimenti e il dollaro, e ha scatenato un AI selloff che ha bruciato $1.000 miliardi di capitalizzazione tech. BTC è stato trascinato dalla stessa marea che ha colpito Nasdaq e oro. <strong>I segnali di capitolazione sono tutti presenti</strong>: RSI a 18, Fear & Greed a 12, OI in crollo, funding negativo estremo, lo streak ETF peggiore di sempre che si è appena chiuso. Storicamente queste sono le condizioni dei minimi locali — ma "storicamente" non significa "con certezza", e il CPI di mercoledì può cambiare tutto. <strong>Per chi ha un PAC, il messaggio è semplice e non cambia: si continua a eseguire a calendario.</strong> Questa settimana il PAC compra a $62k invece che a $80k — è esattamente il momento per cui esiste. Non è il momento di "raddoppiare per recuperare" né di vendere in panico: è il momento di fare esattamente quello che si faceva prima, con disciplina. Chi è fuori dal mercato e valuta un ingresso lo fa scaglionato, consapevole che sotto $60k (200-week MA) si aprirebbe uno scenario più profondo. <strong>La cosa più importante in settimane come questa non è il prezzo di Bitcoin: è non lasciare che il prezzo decida il tuo umore o le tue azioni.</strong>`
+  }
+
+};
+// ╔══════════════════════════════════════════════════════════════╗
+// ║         FINE BLOCCO DATI — NON MODIFICARE SOTTO             ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+// ── POPOLA DOM AL CARICAMENTO ──
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Header
+  var heroTag = document.querySelector('.hero-tag');
+  if (heroTag) heroTag.textContent = 'Report Settimanale · ' + W.edizione;
+  var heroSub = document.querySelector('.hero-sub');
+  if (heroSub) heroSub.textContent = 'Settimana ' + W.periodo + ' · Pubblicato ' + W.pubblicato;
+
+  // Tema
+  var temaEl = document.getElementById('tema-testo');
+  if (temaEl) temaEl.innerHTML = W.tema;
+
+  // Macro KPI
+  [['spx','var(--red)'],['gold','var(--gold)'],['dxy','var(--blue)'],['vwce','var(--green)']].forEach(function(pair) {
+    var key = pair[0], col = pair[1], d = W[key];
+    var priceEl = document.getElementById('price-' + key);
+    if (priceEl) { priceEl.textContent = d.price; priceEl.style.color = col; }
+    var b1 = document.getElementById('badge1-' + key);
+    if (b1) { b1.textContent = d.badge1; b1.className = 'badge ' + d.badge1type; }
+    var b2 = document.getElementById('badge2-' + key);
+    if (b2) { b2.textContent = d.badge2; b2.className = 'badge ' + d.badge2type; }
+    var note = document.getElementById('note-' + key);
+    if (note) note.innerHTML = d.note;
+  });
+
+  // ETF KPI
+  var etfMap = { 'etf-flusso': W.etf.flussoNetto, 'etf-btc-inizio': W.etf.btcInizio, 'etf-btc-fine': W.etf.btcFine, 'etf-aum': W.etf.aumTotale };
+  Object.keys(etfMap).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = etfMap[id];
+  });
+  var cETF = document.getElementById('callout-etf');
+  if (cETF) cETF.innerHTML = W.etf.calloutETF;
+
+  // OI KPI
+  var oiMap = { 'oi-aggregato': W.oi.oiAggregato, 'oi-fr': W.oi.fundingRate, 'oi-shortwall': W.oi.shortWall, 'oi-segnale': W.oi.segnale };
+  Object.keys(oiMap).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = oiMap[id];
+  });
+  var cOI = document.getElementById('callout-oi');
+  if (cOI) cOI.innerHTML = W.oi.callout;
+
+  // Sentiment
+  var s = W.sentiment;
+  var fgNum = document.getElementById('fg-number'); if (fgNum) fgNum.textContent = s.fearGreed;
+  var fgLbl = document.getElementById('fg-label'); if (fgLbl) fgLbl.textContent = s.fearGreedLabel;
+  var fgNeedle = document.getElementById('fg-needle'); if (fgNeedle) fgNeedle.style.left = s.fearGreed + '%';
+  var p1 = document.getElementById('fg-prev1'); if (p1) p1.textContent = s.fearGreedPrev1;
+  var p2 = document.getElementById('fg-prev2'); if (p2) p2.textContent = s.fearGreedPrev2;
+  var fgNote = document.getElementById('fg-note'); if (fgNote) fgNote.innerHTML = s.note;
+  var cSent = document.getElementById('callout-sentiment'); if (cSent) cSent.innerHTML = s.callout;
+
+  // Stagionalità
+  var st = W.stagionalita;
+  var mg = document.getElementById('months-grid');
+  if (mg) {
+    mg.innerHTML = st.mesi.map(function(m) {
+      var sign = m.val >= 0 ? '+' : '';
+      return '<div class="m-cell ' + m.cls + (m.current ? ' m-current' : '') + '"><div class="m-name">' + m.nome + '</div><div class="m-val">' + sign + m.val + '%</div></div>';
+    }).join('');
+  }
+  var smedia = document.getElementById('stag-media'); if (smedia) smedia.textContent = st.mediaStorica;
+  var spos = document.getElementById('stag-pos'); if (spos) spos.textContent = st.anniPositivi;
+  var sneg = document.getElementById('stag-neg'); if (sneg) sneg.textContent = st.anniNegativi;
+  var snote = document.getElementById('stag-note'); if (snote) snote.innerHTML = st.note;
+
+  // Outlook
+  var op = document.getElementById('outlook-periodo'); if (op) op.textContent = 'Sett. ' + W.outlook.periodo;
+  var calTitle = document.getElementById('calendar-title'); if (calTitle) calTitle.textContent = '\uD83D\uDCC5 Calendario Macro \u2014 Settimana ' + W.outlook.periodo;
+
+  var evStack = document.getElementById('events-stack');
+  if (evStack) {
+    evStack.innerHTML = W.outlook.eventi.map(function(ev) {
+      return '<div class="event-row ' + (ev.highlight ? 'highlight' : '') + '"><div class="event-day">' + ev.giorno + '</div><div class="event-content"><div class="event-name">' + ev.nome + '</div><div class="event-meta">' + ev.meta + '</div></div><div class="event-expect">' + ev.desc + '</div></div>';
+    }).join('');
+  }
+
+  var scStack = document.getElementById('scenari-stack');
+  if (scStack) {
+    scStack.innerHTML = W.outlook.scenari.map(function(sc) {
+      var barColor = sc.tipo === 'bull' ? 'var(--green)' : sc.tipo === 'base' ? 'var(--orange)' : 'var(--red)';
+      return '<div class="scenario ' + sc.tipo + '"><div class="sc-header"><span class="sc-tag ' + sc.tagClass + '">' + sc.tag + '</span><span class="sc-prob">' + sc.prob + '</span></div><div class="sc-trigger">' + sc.trigger + '</div><div class="sc-target">' + sc.target + '</div><div class="sc-bar"><div class="sc-fill" style="width:' + sc.prob + ';background:' + barColor + '"></div></div></div>';
+    }).join('');
+  }
+
+  var notaEl = document.getElementById('nota-editoriale');
+  if (notaEl) notaEl.innerHTML = '<strong>Nota editoriale:</strong> ' + W.outlook.nota;
+
+  var footerEd = document.getElementById('footer-edizione');
+  if (footerEd) footerEd.textContent = 'Edizione ' + W.edizione + ' \u00B7 ' + W.pubblicato;
+});
+
+// ═══════════════════════════════════════════════════════
+// MOTORE GRAFICO CANVAS 2D — ZERO DIPENDENZE ESTERNE
+// ═══════════════════════════════════════════════════════
+
+var C = { bg:'#130f20', grid:'#1f1a30', muted:'#5a5070', text:'#ede8f8', font:'9px IBM Plex Mono,monospace' };
+
+function dpr() { return window.devicePixelRatio || 1; }
+
+function setupCanvas(id, h) {
+  var el = document.getElementById(id);
+  if (!el) return null;
+  // Risale al mc-canvas-wrap per la larghezza reale
+  var wrap = el.parentElement;
+  var w = 0;
+  // Prova getBoundingClientRect prima
+  if (wrap.getBoundingClientRect().width > 0) {
+    w = wrap.getBoundingClientRect().width - 28;
+  } else if (wrap.offsetWidth > 0) {
+    w = wrap.offsetWidth - 28;
+  } else {
+    // Fallback: risali alla section-card
+    var card = wrap.closest('[id^="card-"]');
+    if (card && card.getBoundingClientRect().width > 0) {
+      w = card.getBoundingClientRect().width - 40;
+    } else {
+      w = Math.min(window.innerWidth - 80, 900);
+    }
+  }
+  if (w < 50) w = 300;
+  var ratio = window.devicePixelRatio || 1;
+  el.width  = Math.round(w * ratio);
+  el.height = Math.round(h * ratio);
+  el.style.width  = w + 'px';
+  el.style.height = h + 'px';
+  var ctx = el.getContext('2d');
+  ctx.scale(ratio, ratio);
+  ctx.clearRect(0, 0, w, h);
+  return { ctx: ctx, w: w, h: h };
+}
+
+function hexA(hex, a) {
+  var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+}
+
+function smoothPath(ctx, pts, tension) {
+  var t = tension || 0.35;
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (var i = 0; i < pts.length - 1; i++) {
+    var p0 = pts[i > 0 ? i-1 : 0];
+    var p1 = pts[i];
+    var p2 = pts[i+1];
+    var p3 = pts[i+2 < pts.length ? i+2 : i+1];
+    var cp1x = p1.x + (p2.x - p0.x) * t;
+    var cp1y = p1.y + (p2.y - p0.y) * t;
+    var cp2x = p2.x - (p3.x - p1.x) * t;
+    var cp2y = p2.y - (p3.y - p1.y) * t;
+    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+  }
+}
+
+// ── GRAFICO LINEA MACRO ──
+function drawLine(id, labels, data, color, fmt) {
+  var cv = setupCanvas(id, 160);
+  if (!cv) return;
+  var ctx = cv.ctx, w = cv.w, h = cv.h;
+  var pad = { t:10, r:56, b:28, l:8 };
+  var cw = w - pad.l - pad.r, ch = h - pad.t - pad.b;
+  var n = data.length;
+  var mn = Math.min.apply(null, data), mx = Math.max.apply(null, data);
+  var rng = mx - mn || 1;
+  var lo = mn - rng*0.08, hi = mx + rng*0.08;
+  var tx = function(i) { return pad.l + (i/(n-1))*cw; };
+  var ty = function(v) { return pad.t + ch*(1-(v-lo)/(hi-lo)); };
+  var pts = data.map(function(v,i) { return {x:tx(i), y:ty(v)}; });
+
+  // grid 4 linee
+  for (var g = 0; g <= 3; g++) {
+    var gv = lo + (hi-lo)*g/3;
+    var gy = ty(gv);
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(w-pad.r, gy); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.font = C.font; ctx.textAlign = 'left';
+    ctx.fillText(fmt(gv), w-pad.r+4, gy+3);
+  }
+
+  // x labels ogni 3
+  ctx.fillStyle = C.muted; ctx.font = C.font; ctx.textAlign = 'center';
+  for (var xi = 0; xi < n; xi++) {
+    if (xi % 3 === 0 || xi === n-1) ctx.fillText(labels[xi], tx(xi), h-4);
+  }
+
+  // gradient fill
+  var grad = ctx.createLinearGradient(0, pad.t, 0, pad.t+ch);
+  grad.addColorStop(0, hexA(color, 0.22));
+  grad.addColorStop(1, hexA(color, 0));
+
+  // linea smooth
+  ctx.beginPath(); smoothPath(ctx, pts);
+  ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
+
+  // fill
+  ctx.beginPath(); smoothPath(ctx, pts);
+  ctx.lineTo(pts[n-1].x, pad.t+ch); ctx.lineTo(pts[0].x, pad.t+ch);
+  ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+
+  // dot finale
+  var lp = pts[n-1];
+  ctx.beginPath(); ctx.arc(lp.x, lp.y, 4, 0, Math.PI*2);
+  ctx.fillStyle = color; ctx.fill();
+}
+
+// ── ETF DAILY FLOWS ──
+function drawETFDaily() {
+  var cv = setupCanvas('chartEtfDaily', 170);
+  if (!cv) return;
+  var ctx = cv.ctx, w = cv.w, h = cv.h;
+  var labels = W.etf.dailyLabels;
+  var flows = W.etf.dailyFlows;
+  var btc = W.etf.dailyBtc;
+  var n = flows.length;
+  var pad = {t:12, r:54, b:28, l:8};
+  var cw = w-pad.l-pad.r, ch = h-pad.t-pad.b;
+  var slotW = cw/n;
+  var bw = slotW*0.5;
+  var ftx = function(i) { return pad.l + slotW*i + slotW/2; };
+
+  var fmn = Math.min.apply(null, flows), fmx = Math.max.apply(null, flows);
+  var flo = fmn < 0 ? fmn*1.3 : -50;
+  var fhi = fmx*1.25 || 100;
+  var frng = fhi-flo;
+  var fty = function(v) { return pad.t + ch*(1-(v-flo)/frng); };
+  var fzero = fty(0);
+
+  // grid
+  [0, Math.round(fmx*0.5), Math.round(fmx)].forEach(function(v) {
+    var y = fty(v);
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.font = C.font; ctx.textAlign = 'left';
+    ctx.fillText('$'+v+'M', w-pad.r+4, y+3);
+  });
+
+  // x labels
+  ctx.fillStyle = C.muted; ctx.font = C.font; ctx.textAlign = 'center';
+  labels.forEach(function(l,i) { ctx.fillText(l, ftx(i), h-4); });
+
+  // barre flussi
+  flows.forEach(function(v,i) {
+    var x = ftx(i);
+    var y1 = fty(Math.max(v,0)), y2 = fty(Math.min(v,0));
+    var bh = Math.max(2, Math.abs(y1-y2));
+    ctx.fillStyle = v>=0 ? 'rgba(0,229,160,0.85)' : 'rgba(255,61,113,0.85)';
+    ctx.beginPath(); ctx.roundRect(x-bw/2, Math.min(y1,y2), bw, bh, 3); ctx.fill();
+  });
+
+  // linea BTC asse destro
+  var btcLo = Math.min.apply(null,btc)*0.995, btcHi = Math.max.apply(null,btc)*1.005;
+  var tyBtc = function(v) { return pad.t + ch*(1-(v-btcLo)/(btcHi-btcLo)); };
+  var btcPts = btc.map(function(v,i) { return {x:ftx(i), y:tyBtc(v)}; });
+  ctx.beginPath(); smoothPath(ctx, btcPts);
+  ctx.strokeStyle = '#f7931a'; ctx.lineWidth = 2; ctx.stroke();
+  btc.forEach(function(v,i) {
+    ctx.beginPath(); ctx.arc(ftx(i), tyBtc(v), 3, 0, Math.PI*2);
+    ctx.fillStyle = '#f7931a'; ctx.fill();
+  });
+  ctx.fillStyle = '#f7931a'; ctx.font = C.font; ctx.textAlign = 'left';
+  ctx.fillText('$'+(Math.round(btcHi/1000))+'k', w-pad.r+4, tyBtc(btcHi)+3);
+  ctx.fillText('$'+(Math.round(btcLo/1000))+'k', w-pad.r+4, tyBtc(btcLo)+3);
+}
+
+// ── ETF YTD ──
+function drawETFYTD() {
+  var cv = setupCanvas('chartEtfYtd', 170);
+  if (!cv) return;
+  var ctx = cv.ctx, w = cv.w, h = cv.h;
+  var labels = W.etf.ytdLabels;
+  var flows = W.etf.ytdFlows;
+  var n = flows.length;
+  var pad = {t:12, r:54, b:28, l:8};
+  var cw = w-pad.l-pad.r, ch = h-pad.t-pad.b;
+  var slotW = cw/n, bw = slotW*0.55;
+  var ftx = function(i) { return pad.l+slotW*i+slotW/2; };
+  var fmn = Math.min.apply(null,flows), fmx = Math.max.apply(null,flows);
+  var flo = fmn*1.2, fhi = fmx*1.2||100;
+  var frng = fhi-flo;
+  var fty = function(v) { return pad.t+ch*(1-(v-flo)/frng); };
+
+  // grid
+  [-1,0,1].forEach(function(m) {
+    var v = m===0 ? 0 : (m>0 ? fmx*0.6 : fmn*0.6);
+    var y = fty(v);
+    ctx.strokeStyle = C.grid; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.font = C.font; ctx.textAlign='left';
+    var absV = Math.abs(v);
+    ctx.fillText((v<0?'-':'')+'$'+(absV>=1000?(absV/1000).toFixed(1)+'k':Math.round(absV))+'M', w-pad.r+4, y+3);
+  });
+
+  // x labels (ogni 2)
+  ctx.fillStyle = C.muted; ctx.font = C.font; ctx.textAlign='center';
+  labels.forEach(function(l,i) { if(i%2===0||i===n-1) ctx.fillText(l, ftx(i), h-4); });
+
+  // barre
+  flows.forEach(function(v,i) {
+    var x=ftx(i), y1=fty(Math.max(v,0)), y2=fty(Math.min(v,0));
+    var bh=Math.max(2,Math.abs(y1-y2));
+    ctx.fillStyle = v>=0?'rgba(0,229,160,0.8)':'rgba(255,61,113,0.75)';
+    ctx.beginPath(); ctx.roundRect(x-bw/2, Math.min(y1,y2), bw, bh, 3); ctx.fill();
+  });
+
+  // BTC line YTD (prezzi approssimativi settimana per settimana)
+  var btcYtd = [97000,91000,87000,83000,79000,74000,70000,66000,64000,66300,70500,69600,66300,71534];
+  var btcN = Math.min(btcYtd.length, n);
+  var btcLo = Math.min.apply(null,btcYtd.slice(0,btcN))*0.97;
+  var btcHi = Math.max.apply(null,btcYtd.slice(0,btcN))*1.03;
+  var tyBtc = function(v) { return pad.t+ch*(1-(v-btcLo)/(btcHi-btcLo)); };
+  var btcPts = btcYtd.slice(0,btcN).map(function(v,i) { return {x:ftx(i), y:tyBtc(v)}; });
+  ctx.beginPath(); smoothPath(ctx, btcPts);
+  ctx.strokeStyle='#f7931a'; ctx.lineWidth=2; ctx.stroke();
+  var lp = btcPts[btcPts.length-1];
+  ctx.beginPath(); ctx.arc(lp.x, lp.y, 3, 0, Math.PI*2);
+  ctx.fillStyle='#f7931a'; ctx.fill();
+  ctx.fillStyle='#f7931a'; ctx.font=C.font; ctx.textAlign='left';
+  ctx.fillText('$'+(Math.round(btcHi/1000))+'k', w-pad.r+4, tyBtc(btcHi)+10);
+  ctx.fillText('$'+(Math.round(btcLo/1000))+'k', w-pad.r+4, tyBtc(btcLo)-2);
+}
+
+// ── ETF BREAKDOWN barre orizzontali ──
+function drawETFBreakdown() {
+  var cv = setupCanvas('chartEtfBreakdown', 200);
+  if (!cv) return;
+  var ctx = cv.ctx, w = cv.w, h = cv.h;
+  var labels = W.etf.emittenti;
+  var values = W.etf.emittentiFlussi;
+  var n = values.length;
+  var pad = {t:6, r:60, b:6, l:120};
+  var cw = w-pad.l-pad.r, ch = h-pad.t-pad.b;
+  var absMax = Math.max.apply(null, values.map(Math.abs)) || 1;
+  var bh = (ch/n)*0.55;
+  var gap = ch/n;
+
+  values.forEach(function(v,i) {
+    var y = pad.t + i*gap + (gap-bh)/2;
+    var barW = (Math.abs(v)/absMax)*cw*0.75;
+    var color = v>=0 ? 'rgba(0,229,160,0.85)' : 'rgba(255,61,113,0.85)';
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.roundRect(pad.l, y, Math.max(barW,2), bh, 3); ctx.fill();
+    // label sinistra
+    ctx.fillStyle = C.text; ctx.font = '9px Manrope,sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(labels[i], pad.l-6, y+bh/2+3);
+    // valore destra
+    var sign = v>=0 ? '+' : '−';
+    ctx.fillStyle = color; ctx.font = 'bold 9px IBM Plex Mono,monospace'; ctx.textAlign = 'left';
+    ctx.fillText(sign+'$'+Math.abs(v)+'M', pad.l+barW+6, y+bh/2+3);
+  });
+}
+
+// ── OI + FUNDING RATE (asse dinamico dai dati W) ──
+function drawOI() {
+  var cv = setupCanvas('chartOI', 170);
+  if (!cv) return;
+  var ctx = cv.ctx, w = cv.w, h = cv.h;
+  var labels = W.oi.labels;
+  var oi = W.oi.oiData;
+  var fr = W.oi.frData;
+  var n = oi.length;
+  var pad = {t:12, r:56, b:28, l:8};
+  var cw = w-pad.l-pad.r, ch = h-pad.t-pad.b;
+  var slotW = cw/n;
+  var tx = function(i) { return pad.l+slotW*i+slotW/2; };
+
+  // OI axis — dinamico dai dati
+  var oiMn = Math.min.apply(null,oi), oiMx = Math.max.apply(null,oi);
+  var oiRng = oiMx-oiMn || 1;
+  var oiLo = oiMn - oiRng*0.15, oiHi = oiMx + oiRng*0.15;
+  var tyOI = function(v) { return pad.t+ch*(1-(v-oiLo)/(oiHi-oiLo)); };
+
+  // FR axis — dinamico
+  var frMn = Math.min.apply(null,fr), frMx = Math.max.apply(null,fr);
+  var frLo = frMn - Math.abs(frMn)*0.5 - 0.005;
+  var frHi = frMx + Math.abs(frMx)*0.5 + 0.005;
+  var frRng = frHi-frLo || 0.01;
+  var tyFR = function(v) { return pad.t+ch*(1-(v-frLo)/frRng); };
+
+  // grid OI
+  var gridVals = [oiLo, (oiLo+oiHi)/2, oiHi];
+  gridVals.forEach(function(v) {
+    var y = tyOI(v);
+    ctx.strokeStyle = C.grid; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.font = C.font; ctx.textAlign='left';
+    ctx.fillText('$'+v.toFixed(0)+'B', w-pad.r+4, y+3);
+  });
+
+  // x labels
+  ctx.fillStyle=C.muted; ctx.font=C.font; ctx.textAlign='center';
+  labels.forEach(function(l,i) { ctx.fillText(l, tx(i), h-4); });
+
+  // FR barre
+  var bwFR = slotW*0.38;
+  fr.forEach(function(v,i) {
+    var x=tx(i);
+    var y1=tyFR(Math.max(v,0)), y2=tyFR(Math.min(v,0));
+    var bh=Math.max(3, Math.abs(y1-y2));
+    ctx.fillStyle = v>=0 ? 'rgba(0,229,160,0.7)' : 'rgba(255,61,113,0.7)';
+    ctx.beginPath(); ctx.roundRect(x-bwFR/2, Math.min(y1,y2), bwFR, bh, 2); ctx.fill();
+  });
+
+  // OI linea smooth
+  var oiPts = oi.map(function(v,i) { return {x:tx(i), y:tyOI(v)}; });
+  var grad = ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
+  grad.addColorStop(0,'rgba(167,139,250,0.18)');
+  grad.addColorStop(1,'rgba(167,139,250,0)');
+  ctx.beginPath(); smoothPath(ctx,oiPts);
+  ctx.strokeStyle='#a78bfa'; ctx.lineWidth=2.5; ctx.stroke();
+  ctx.beginPath(); smoothPath(ctx,oiPts);
+  ctx.lineTo(oiPts[n-1].x,pad.t+ch); ctx.lineTo(oiPts[0].x,pad.t+ch);
+  ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
+  oi.forEach(function(v,i) {
+    ctx.beginPath(); ctx.arc(tx(i),tyOI(v),4,0,Math.PI*2);
+    ctx.fillStyle='#a78bfa'; ctx.fill();
+  });
+
+  // legenda
+  ctx.fillStyle='#a78bfa'; ctx.font=C.font; ctx.textAlign='left';
+  ctx.fillText('── OI ($B)', pad.l, pad.t+10);
+  ctx.fillStyle='rgba(0,229,160,0.8)';
+  ctx.fillText('▐ FR+', pad.l+70, pad.t+10);
+  ctx.fillStyle='rgba(255,61,113,0.8)';
+  ctx.fillText('▐ FR−', pad.l+100, pad.t+10);
+}
+
+// ── MAPPA CARD → FUNZIONE RENDER ──
+var cardChartMap = {
+  'spx':           function() { drawLine('chartSpx',  W.spx.labels,  W.spx.closes,  '#ff3d71', function(v){return v.toLocaleString('en-US',{maximumFractionDigits:0});}) },
+  'gold':          function() { drawLine('chartGold', W.gold.labels, W.gold.closes, '#ffd166', function(v){return '$'+v.toLocaleString('en-US',{maximumFractionDigits:0});}) },
+  'dxy':           function() { drawLine('chartDxy',  W.dxy.labels,  W.dxy.closes,  '#4d9eff', function(v){return v.toFixed(2);}) },
+  'vwce':          function() { drawLine('chartVwce', W.vwce.labels, W.vwce.closes, '#00e5a0', function(v){return '\u20AC'+v.toFixed(2);}) },
+  'etf-daily':     function() { drawETFDaily(); },
+  'etf-ytd':       function() { drawETFYTD(); },
+  'etf-breakdown': function() { drawETFBreakdown(); },
+  'oi':            function() { drawOI(); }
+};
+
+// ── TOGGLE CARD ──
+function toggleMacro(id) {
+  var card = document.getElementById('card-' + id);
+  if (!card) return;
+  var isOpen = card.classList.contains('open');
+  if (isOpen) {
+    card.classList.remove('open');
+  } else {
+    card.classList.add('open');
+    // doppio rAF: garantisce che il browser abbia calcolato il layout prima di disegnare
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        if (cardChartMap[id]) cardChartMap[id]();
+      });
+    });
+  }
+}
+
+// ── RENDER ALL OPEN CARDS ON LOAD ──
+function renderAllOpen() {
+  document.querySelectorAll('[id^="card-"]').forEach(function(card) {
+    if (card.classList.contains('open')) {
+      var id = card.id.replace('card-','');
+      if (cardChartMap[id]) cardChartMap[id]();
+    }
+  });
+}
+window.addEventListener('load', function() {
+  setTimeout(renderAllOpen, 50);
+  setTimeout(renderAllOpen, 250);
+  setTimeout(renderAllOpen, 700);
+});
+window.addEventListener('resize', function() {
+  clearTimeout(window._rt);
+  window._rt = setTimeout(renderAllOpen, 200);
+});
+
+// IntersectionObserver: ridisegna ogni canvas quando entra nel viewport
+if (window.IntersectionObserver) {
+  var ioChart = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var wrap = entry.target.closest('.macro-chart-wrap');
+        if (!wrap) return;
+        var card = wrap.closest('[id^="card-"]');
+        if (!card) return;
+        var id = card.id.replace('card-','');
+        if (card.classList.contains('open') && cardChartMap[id]) {
+          cardChartMap[id]();
+        }
+      }
+    });
+  }, { threshold: 0.1 });
+  // Osserva tutti i canvas dopo il load
+  window.addEventListener('load', function() {
+    document.querySelectorAll('canvas').forEach(function(c) { ioChart.observe(c); });
+  });
+}
+
+// ── RESIZE ──
+window.addEventListener('resize', function() {
+  clearTimeout(window._rt);
+  window._rt = setTimeout(function() {
+    document.querySelectorAll('[id^="card-"]').forEach(function(card) {
+      if (card.classList.contains('open')) {
+        var id = card.id.replace('card-','');
+        if (cardChartMap[id]) cardChartMap[id]();
+      }
+    });
+  }, 200);
+});
+
+</script>
+</body>
+</html>
